@@ -8,11 +8,12 @@ import helmet from "helmet";
 import morgan from "morgan";
 import path from "path";
 import { fileURLToPath } from "url";
+import authRoutes from "./routes/auth.js";
+import { register } from "./controllers/auth.js";
 
 // Configurations
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-console.log(__dirname);
 dotoenv.config();
 
 // init app express
@@ -27,8 +28,8 @@ app.use(
   })
 );
 app.use(morgan("common"));
-app.use(bodyParser.json({ limit: "30mb", extended: true }));
-app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 app.use("/assets", express.static(path.join(__dirname, "public/assets")));
 
@@ -44,5 +45,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+//mongoose setup
+mongoose.connect(process.env.MONGO_URI);
+
 //routes
-app.get("/api/users", (_, res) => res.json({ greeting: "Hello" }));
+app.post("/auth/register", upload.single("picture"), register); //this has to go into routes
+app.get("/api/users", (_, res) => res.json({ greeting: "Hello!" }));
+app.use("/auth", authRoutes);
